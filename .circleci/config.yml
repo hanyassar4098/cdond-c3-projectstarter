@@ -329,14 +329,18 @@ jobs:
             fi 
       - destroy_environment
       - revert-migrations
+  
   cloudfront-update:
     docker:
+      # Docker image here that supports AWS CLI
       - image: amazon/aws-cli
     steps:
+      # Checkout code from git
       - checkout
       - run:
           name: Install dependencies
           command: |
+            # your code here
             yum -y install tar gzip
       - run:
           name: Update cloudfront distribution
@@ -362,11 +366,11 @@ jobs:
             --request PUT \
             --data "$OldWorkflowID" https://api.memstash.io/values/OldWorkflowID           
           no_output_timeout: 30m
-
+      # Here's where you will add some code to rollback on failure  
       - revert-migrations
-      - destroy_environment  
-
-cleanup:
+      - destroy_environment
+     
+  cleanup:
     docker:
       - image: amazon/aws-cli
     steps:
