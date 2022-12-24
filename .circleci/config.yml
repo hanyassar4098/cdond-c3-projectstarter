@@ -182,8 +182,7 @@ jobs:
               --tags project=udapeople \
               --stack-name udapeople-backend-<< pipeline.parameters.workflow-id >> \
               --parameter-overrides ID="<< pipeline.parameters.workflow-id >>" \
-              --tags project=udapeople 
-          no_output_timeout: 30m
+
           
       - run:
           name: Ensure front-end infrastructure exist
