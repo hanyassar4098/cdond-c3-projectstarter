@@ -1,4 +1,6 @@
 version: 2.1
+orbs:
+  slack: circleci/slack@4.4.4
 
 parameters:
   # Add parameter here 
@@ -510,6 +512,10 @@ jobs:
 workflows:
   default:
     jobs:
+     - slack/on-hold:
+            branch_pattern: master 
+            channel: https://egfwd-t3-october-22.slack.com/archives/D045LT94F97
+            
       - build-frontend
       - build-backend
       - test-frontend:
