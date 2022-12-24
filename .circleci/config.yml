@@ -226,7 +226,7 @@ jobs:
       - checkout
       # Add ssh keys with fingerprint
       - add_ssh_keys:
-          fingerprints: ["a6:ac:72:3c:e9:8b:eb:a6:9f:a4:fb:ec:d3:35:98:86"]
+          fingerprints: ["d5:a8:ab:fa:34:84:ae:2a:a0:2c:87:6c:1a:30:cc:c8"]
       # attach workspace
       - attach_workspace:
           at: ~/
@@ -369,7 +369,7 @@ jobs:
       - checkout
       # Add ssh keys with fingerprint
       - add_ssh_keys:
-          fingerprints: ["a6:ac:72:3c:e9:8b:eb:a6:9f:a4:fb:ec:d3:35:98:86"]     
+          fingerprints: ["d5:a8:ab:fa:34:84:ae:2a:a0:2c:87:6c:1a:30:cc:c8"]     
       - attach_workspace:
           at: .circleci/ansible/
       - run:
@@ -515,7 +515,7 @@ workflows:
      - slack/on-hold:
             branch_pattern: master 
             channel: https://egfwd-t3-october-22.slack.com/archives/D045LT94F97
-            
+
       - build-frontend
       - build-backend
       - test-frontend:
