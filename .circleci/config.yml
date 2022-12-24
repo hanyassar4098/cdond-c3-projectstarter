@@ -1,15 +1,15 @@
 version: 2.1
-
-commands:
-  destroy-environment:
-    description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
-  parameters:
+parameters:
       workflow-id:
         type: string
         default: ${CIRCLE_WORKFLOW_ID:0:7}
       memstash-token:
         type: string
         default: "b34bb21f-dd4a-46b3-b31f-190d015509af" 
+        
+commands:
+  destroy-environment:
+    description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
 
     steps:
       - run:
@@ -370,7 +370,7 @@ jobs:
       - revert-migrations
       - destroy_environment
      
-  cleanup:
+cleanup:
     docker:
       - image: amazon/aws-cli
     steps:
