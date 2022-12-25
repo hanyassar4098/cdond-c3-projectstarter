@@ -298,7 +298,7 @@ jobs:
             ls -la
             cat backend/migration.txt          
       - revert-migrations
-      #- destroy_environment
+      - destroy_environment
           
   deploy-frontend:
     docker:
@@ -312,7 +312,9 @@ jobs:
           command: |
             curl -sL https://rpm.nodesource.com/setup_lts.x | bash -
             yum -y install nodejs
-            yum -y install tar gzip      
+            yum -y install tar gzip
+            yum-skip-broken       
+            
       - attach_workspace:
           at: ~/
       - run:
