@@ -263,7 +263,7 @@ jobs:
 
   run-migrations:
     docker:
-      - image: circleci/node:13.8.0
+      - image: cimg/node:19.3.0
     steps:
       - checkout
       - restore_cache:
@@ -272,9 +272,7 @@ jobs:
           name: Run migrations
           command: |
             cd backend
-            npm cache clean --force
             npm install
-            npm audit fix
             touch migration.txt
             npm run migrations >> migration.txt
             cat migration.txt
