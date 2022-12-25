@@ -302,10 +302,8 @@ jobs:
           
   deploy-frontend:
     docker:
-      # Docker image here that supports AWS CLI
       - image: amazon/aws-cli
     steps:
-      # Checkout code from git
       - checkout
       - run:
           name: Install dependencies
@@ -313,31 +311,15 @@ jobs:
             curl -sL https://rpm.nodesource.com/setup_lts.x | bash -
             yum -y install nodejs
             yum -y install tar gzip
-            rpm -Va --nofiles --nodigest       
-            
-      - attach_workspace:
-          at: ~/
       - run:
           name: Get backend url
           command: |
-            # your code here
-            export BACKEND_IP=$(sed -n 2p .circleci/ansible/inventory.txt)
+            BACKEND_IP=$(curl -H "token: ${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/url_${CIRCLE_WORKFLOW_ID})
             export API_URL="http://${BACKEND_IP}:3030"
-            #echo ENVIRONMENT=production > "frontend/.env"
-            #echo NODE_ENV=production >> "frontend/.env"
-            #echo API_URL=$API_URL >> "frontend/.env"            
-            #BACKEND_IP=$(curl -H "token: IP-${CIRCLE_WORKFLOW_ID}" \
-            #            --request GET https://api.memstash.io/values/IP)
-            #export API_URL="http://${BACKEND_IP}:3030"
-            #echo API_URL="http://${BACKEND_IP}:3030" >> "frontend/.env"
-            #echo "${API_URL}"
-            #export API_URL=`cat .circleci/outputs/backend_url.txt`
-            #echo "API_URL: $API_URL"
-            #export API_URL="http://${BACKEND_IP}:3030"
-            #echo API_URL="http://${BACKEND_IP}:3030" >> "frontend/.env"
             echo "${API_URL}"
-            echo $API_URL > ~/api_url.txt
-            echo "API_URL=${API_URL}" >> frontend/.env            
+            cd frontend
+            npm update
+            npm run build          
       - run:
           name: Deploy frontend objects
           command: |
@@ -349,8 +331,8 @@ jobs:
             aws s3 cp ./dist s3://udapeople-<< pipeline.parameters.workflow-id >> --recursive
             npm run build
       # Here's where you will add some code to rollback on failure      
-      #- revert-migrations
-      #- destroy_environment
+      - revert-migrations
+      - destroy_environment
           
   deploy-backend:
     docker:
