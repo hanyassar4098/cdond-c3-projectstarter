@@ -168,7 +168,6 @@ jobs:
             
   deploy-infrastructure:
     docker:
-      # Docker image here that supports AWS CLI
       - image: amazon/aws-cli
     steps:
       # Checkout code from git
@@ -177,7 +176,6 @@ jobs:
       - run:
           name: Ensure back-end infrastructure exists
           command: |
-            # Use the workflow id to mark your CloudFormation stacks so that you can reference them later on (ex: rollback). 
             aws cloudformation deploy \
                 --template-file .circleci/files/backend.yml \
                 --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
@@ -224,7 +222,7 @@ jobs:
       - checkout
       # Add ssh keys with fingerprint
       - add_ssh_keys:
-          fingerprints: ["d5:a8:ab:fa:34:84:ae:2a:a0:2c:87:6c:1a:30:cc:c8"]
+          fingerprints: ["7e:70:58:c4:0e:fc:ad:76:60:30:ec:5f:bc:cb:d7:81"]
       # attach workspace
       - attach_workspace:
           at: ~/
@@ -367,7 +365,7 @@ jobs:
       - checkout
       # Add ssh keys with fingerprint
       - add_ssh_keys:
-          fingerprints: ["d5:a8:ab:fa:34:84:ae:2a:a0:2c:87:6c:1a:30:cc:c8"]     
+          fingerprints: ["7e:70:58:c4:0e:fc:ad:76:60:30:ec:5f:bc:cb:d7:81"]     
       - attach_workspace:
           at: .circleci/ansible/
       - run:
