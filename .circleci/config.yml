@@ -272,6 +272,7 @@ jobs:
           name: Run migrations
           command: |
             cd backend
+            npm cache clean --force
             npm install
             touch migration.txt
             npm run migrations >> migration.txt
@@ -280,19 +281,16 @@ jobs:
       - run:
           name: Send migration results to memstash
           command: |
-            cd backend
-            cat migration.txt
-            result=0
-            if grep -q "has been executed successfully" migration.txt
+            cd backend        
+              if grep  "success" migrations-${CIRCLE_WORKFLOW_ID:0:7}.txt
             then
-              result=1
+              echo "DB migration was successful, will update kvdb..."
+              curl --insecure https://kvdb.io/CcbnMs23JZkzFEthwRcGRn/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+            else
+              echo "DB migration failed"
+              curl --insecure https://kvdb.io/CcbnMs23JZkzFEthwRcGRn/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '0'
             fi
-            curl -H "Content-Type: text/plain" \
-            -H "token: migration_${CIRCLE_WORKFLOW_ID}" \
-            --request PUT \
-            --data ${result} https://api.memstash.io/values/migration
-            echo ${result}
-          no_output_timeout: 30m 
+            echo "WorkflowID=${CIRCLE_WORKFLOW_ID:0:7}"
       - run:
           name: LogOnFail
           when: on_fail
