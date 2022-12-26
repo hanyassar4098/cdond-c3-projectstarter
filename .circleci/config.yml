@@ -7,7 +7,7 @@ parameters:
     default: ${CIRCLE_WORKFLOW_ID:0:7}
   memstash-token:
     type: string
-    default: "b34bb21f-dd4a-46b3-b31f-190d015509af" 
+    default: "CcbnMs23JZkzFEthwRcGRn" 
 
 commands:
   node_install:
@@ -428,40 +428,30 @@ jobs:
             fi
       # Here's where you will add some code to rollback on failure  
       - destroy_environment
-      - revert-migrations      
+      - revert-migrations  
   cloudfront-update:
     docker:
-      # Docker image here that supports AWS CLI
       - image: cimg/base:stable
     steps:
-      # Checkout code from git
       - checkout
-      - awscli_install
-      - node_install
+      - install_awscli
+      - install_nodejs
+      - run:
+          name: Save Old Workflow ID to kvdb.io
+          command: |
+            export OLD_WORKFLOW_ID=$(aws cloudformation \
+                      list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+                      --no-paginate --output text)
+            echo "Old Wokflow ID: $OLD_WORKFLOW_ID"
+            curl https://kvdb.io/CcbnMs23JZkzFEthwRcGRn/old_workflow_id -d "${OLD_WORKFLOW_ID}"
       - run:
           name: Update cloudfront distribution
           command: |
-            # your code here
-            export OldWorkflowID=$(aws cloudformation list-exports \
-            --query "Exports[?Name==\`WorkflowID\`].Value" \
-            --no-paginate --output text)
-            
-            export STACKS=$(aws cloudformation list-stacks \
-            --query "StackSummaries[*].StackName" \
-            --stack-status-filter CREATE_COMPLETE \
-            --no-paginate --output text)
-            
-            echo OldWorkflowID: "$OldWorkflowID"
-            echo STACKS: "$STACKS" 
             aws cloudformation deploy \
-            --template-file .circleci/files/cloudfront.yml \
-            --stack-name udapeople-cloudfront \
-            --parameter-overrides WorkflowID="<< pipeline.parameters.workflow-id >>" \
-            --tags project=udapeople
-            curl -H "Content-Type: text/plain" -H "token: OldWorkflowID-${CIRCLE_WORKFLOW_ID}" \
-            --request PUT \
-            --data "$OldWorkflowID" https://api.memstash.io/values/OldWorkflowID           
-          no_output_timeout: 30m
+              --template-file .circleci/files/cloudfront.yml \
+              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
+              --stack-name InitialStack
+
       # Here's where you will add some code to rollback on failure  
       - revert-migrations
       - destroy_environment
@@ -482,7 +472,7 @@ jobs:
                       list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
                       --no-paginate --output text)
             echo "Old Wokflow ID: $OLD_WORKFLOW_ID"
-            curl https://kvdb.io/${KVDB_BUCKET}/old_workflow_id -d "${OLD_WORKFLOW_ID}"
+            curl https://kvdb.io/CcbnMs23JZkzFEthwRcGRn/old_workflow_id -d "${OLD_WORKFLOW_ID}"
       - run:
           name: Remove old stacks and files
           command: |
