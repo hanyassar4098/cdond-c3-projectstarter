@@ -10,6 +10,15 @@ parameters:
     default: "b34bb21f-dd4a-46b3-b31f-190d015509af" 
 
 commands:
+  awscli_install:
+    description: Install AWS CLI v2 
+    steps:
+      - run:
+          name: Install AWS CLI v2  
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
   destroy_environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.       
     steps:
@@ -305,7 +314,7 @@ jobs:
       - image: cimg/base:stable
     steps:
       - checkout
-      - install_awscli
+      - awscli_install
       - install_nodejs
       - restore_cache:
           keys: [frontend-build]
