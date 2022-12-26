@@ -454,7 +454,7 @@ jobs:
             echo OldWorkflowID: "$OldWorkflowID"
             echo STACKS: "$STACKS" 
             aws cloudformation deploy \
-            --template-file /root/project/.circleci/files/cloudfront.yml \
+            --template-file .circleci/files/cloudfront.yml \
             --stack-name udapeople-cloudfront \
             --parameter-overrides WorkflowID="<< pipeline.parameters.workflow-id >>" \
             --tags project=udapeople
