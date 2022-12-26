@@ -432,10 +432,12 @@ jobs:
   cloudfront-update:
     docker:
       # Docker image here that supports AWS CLI
-      - image: amazon/aws-cli
+      - image: cimg/base:stable
     steps:
       # Checkout code from git
       - checkout
+      - awscli_install
+      - node_install
       - run:
           name: Install dependencies
           command: |
@@ -472,10 +474,12 @@ jobs:
   cleanup:
     docker:
       # Docker image here
-      - image: amazon/aws-cli
+      - image: cimg/base:stable
     steps:
       # Checkout code from git 1
       - checkout
+      - awscli_install
+      - node_install
       - run:
           name: Get old stack workflow id
           command: |
