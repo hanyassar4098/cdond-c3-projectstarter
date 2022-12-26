@@ -10,14 +10,14 @@ parameters:
     default: "b34bb21f-dd4a-46b3-b31f-190d015509af" 
 
 commands:
-node_install:
-  description: install Node.js 13
-  steps:
-  - run:
-      name: Install Node.js 13
-      command: |
-        curl -fsSL https://deb.nodesource.com/setup_13.x | sudo -E bash -
-        sudo apt install -y nodejs
+  node_install:
+    description: install Node.js 13
+    steps:
+    - run:
+        name: Install Node.js 13
+        command: |
+          curl -fsSL https://deb.nodesource.com/setup_13.x | sudo -E bash -
+          sudo apt install -y nodejs
   awscli_install:
     description: Install AWS CLI v2 
     steps:
@@ -350,7 +350,7 @@ jobs:
             npm run build
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
-      - destroy-environment
+      - destroy_environment
       - revert-migrations
       
   deploy-backend:
