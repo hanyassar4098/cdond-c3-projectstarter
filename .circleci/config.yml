@@ -10,6 +10,14 @@ parameters:
     default: "b34bb21f-dd4a-46b3-b31f-190d015509af" 
 
 commands:
+node_install:
+  description: install Node.js 13
+  steps:
+  - run:
+      name: Install Node.js 13
+      command: |
+        curl -fsSL https://deb.nodesource.com/setup_13.x | sudo -E bash -
+        sudo apt install -y nodejs
   awscli_install:
     description: Install AWS CLI v2 
     steps:
@@ -315,7 +323,7 @@ jobs:
     steps:
       - checkout
       - awscli_install
-      - install_nodejs
+      - node_install
       - restore_cache:
           keys: [frontend-build]
       - run:
