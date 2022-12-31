@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  slack: circleci/slack@4.9.3
+
 parameters:
   # Add parameter here 
   workflow-id:
@@ -10,6 +13,12 @@ parameters:
     default: "CcbnMs23JZkzFEthwRcGRn" 
 
 commands:
+  notify_on_failure:
+      steps:
+        - slack/notify:
+          event: fail
+          channel: udapeople
+          template: basic_fail_1
   node_install:
     description: install Node.js 13
     steps:
@@ -72,7 +81,7 @@ jobs:
     environment:
       CODE: 123
     docker:
-      - image: circleci/node:13.8.0
+      - image: cimg/node:13.8.0
     steps:
       - checkout
       - restore_cache:
@@ -89,6 +98,7 @@ jobs:
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
+      - notify_on_failure
 
   build-backend:
     docker:
@@ -488,6 +498,16 @@ jobs:
               echo "Fresh New Stacks"
             fi
           no_output_timeout: 30m  
+
+  notify_on_success:
+      docker:
+        -image: cimg/base:stable
+      steps:
+        - slack/notify:
+            event: pass
+            channel: udapeople
+            template: success_tagged_deployment_1
+
 workflows:
   default:
     jobs:
@@ -520,3 +540,6 @@ workflows:
           requires: [smoke-test]
       - cleanup:
           requires: [cloudfront-update]
+      - notify_on_success:
+          requires:
+            - ""
