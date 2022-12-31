@@ -542,5 +542,4 @@ workflows:
       - cleanup:
           requires: [cloudfront-update]
       - notify_on_success:
-          requires:
-            - ""
+          requires: [cloudfront-update]
