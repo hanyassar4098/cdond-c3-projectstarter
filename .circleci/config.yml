@@ -500,10 +500,10 @@ jobs:
           no_output_timeout: 30m  
 
   notify_on_success:
-      docker:
-        -image: cimg/base
-      steps:
-        - slack/notify:
+    docker:
+      - image: cimg/base:stable
+    steps:
+       - slack/notify:
             event: pass
             channel: udapeople
             template: success_tagged_deployment_1
