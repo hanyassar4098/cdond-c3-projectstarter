@@ -338,6 +338,8 @@ workflows:
           requires: [build-backend]
       - scan-frontend:
           requires: [build-frontend]
+      - notify_on_success:
+          requires: [build-frontend]
       # - deploy-infrastructure:
       #     requires: [test-frontend, test-backend, scan-frontend, scan-backend]
       #     filters:
@@ -358,6 +360,3 @@ workflows:
       # - cleanup:
       #     requires: [cloudfront-update]
 
-        - notify_on_success:
-            requires: 
-              - ""
