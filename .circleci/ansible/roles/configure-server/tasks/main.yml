@@ -11,9 +11,9 @@
     state: latest
     update_cache: yes
 
-- name: "install node 12.X"
+- name: "install node 13.X"
   shell: |
-    curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+    curl -sL https://deb.nodesource.com/setup_13.x | sudo -E bash -
     sudo apt -y upgrade
     sudo apt install -y nodejs
 
