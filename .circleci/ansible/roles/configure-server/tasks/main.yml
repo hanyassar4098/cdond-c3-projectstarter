@@ -1,36 +1,20 @@
-  
-- name: "upgrade packages."
-  become: true
-  apt:
-    upgrade: "yes"
+--- 
 
-- name: "install dependencies."
+- name: "Add Nod js from  Node source."
+  become: true
+  shell: |
+    curl -sL https://deb.nodesource.com/setup_13.x | sudo -E bash -
+
+- name: "install nodejs."
   become: true
   apt:
     name: ["nodejs", "npm"]
     state: latest
     update_cache: yes
 
-- name: "install node 13.X"
-  shell: |
-    curl -sL https://deb.nodesource.com/setup_13.x | sudo -E bash -
-    sudo apt -y upgrade
-    sudo apt install -y nodejs
-
-- name: "install pm2 by npm"
+- name: "install pm2 by Globally"
   become: true
   npm:
     name: pm2
     global: yes
     production: yes
-    state: present
-    
-- name: "copy files from CircleCI to server"
-  copy:
-    src: /root/project/backend
-    dest: /home/ubuntu
-
-- name: "install package dependencies"
-  shell: |
-    cd /home/ubuntu/backend    
-    npm install
