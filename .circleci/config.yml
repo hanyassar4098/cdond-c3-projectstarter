@@ -290,18 +290,17 @@ jobs:
           command: |
             cd backend
             npm install
-            touch migration.txt
-            npm run migrations >> migrations_dump.txt
-            cat migration.txt
-          no_output_timeout: 30m
+            npm run migrations > migrations_dump.txt
+            cat migrations_dump.txt
       - run:
-          name: Send migration status to kvdb.io OR memstash.io
-          command: |   
-              if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
-              then               
-                  # If you are using kvdb.io, generate the bucket ID "9GE4jRtKznmVKRfvdBABBe" in your local terminal first
-                  curl https://kvdb.io/CcbnMs23JZkzFEthwRcGRn/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
-              fi
+          name: Send migration status to kvdb.io
+          command: |
+            if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
+            then
+              curl https://kvdb.io/${KVDB_BUCKET}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+            else
+              echo "No migrations are pending" 
+            fi
       - run:
           name: LogOnFail
           when: on_fail
