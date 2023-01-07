@@ -236,7 +236,7 @@ jobs:
       - checkout
       # Add ssh keys with fingerprint
       - add_ssh_keys:
-          fingerprints: ["e8:33:3a:91:c3:9f:a9:1f:8d:54:ce:74:da:fe:ab:13"]
+          fingerprints: ["7e:70:58:c4:0e:fc:ad:76:60:30:ec:5f:bc:cb:d7:81"]
       # attach workspace
       - attach_workspace:
           at: ~/
@@ -280,7 +280,7 @@ jobs:
 
   run-migrations:
     docker:
-      - image: cimg/node:13.8.0
+      - image: cimg/node:19.3.0
     steps:
       - checkout
       - restore_cache:
@@ -289,18 +289,24 @@ jobs:
           name: Run migrations
           command: |
             cd backend
-            npm install  
-            npm run migrations > migrations_dump.txt
-            cat migrations_dump.txt
+            npm install
+            touch migration.txt
+            npm run migrations >> migration.txt
+            cat migration.txt
+          no_output_timeout: 30m
       - run:
-          name: Send migration status to kvdb.io
+          name: Send migration results to memstash
           command: |
-            if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
+            cd backend        
+              if grep  "success" migrations-${CIRCLE_WORKFLOW_ID:0:7}.txt
             then
-              curl https://kvdb.io/${KVDB_BUCKET}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+              echo "DB migration was successful, will update kvdb..."
+              curl --insecure https://kvdb.io/CcbnMs23JZkzFEthwRcGRn/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             else
-              echo "No migrations are pending" 
+              echo "DB migration failed"
+              curl --insecure https://kvdb.io/CcbnMs23JZkzFEthwRcGRn/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '0'
             fi
+            echo "WorkflowID=${CIRCLE_WORKFLOW_ID:0:7}"
       - run:
           name: LogOnFail
           when: on_fail
@@ -356,7 +362,7 @@ jobs:
       - checkout
       # Add ssh keys with fingerprint
       - add_ssh_keys:
-          fingerprints: ["e8:33:3a:91:c3:9f:a9:1f:8d:54:ce:74:da:fe:ab:13"]     
+          fingerprints: ["7e:70:58:c4:0e:fc:ad:76:60:30:ec:5f:bc:cb:d7:81"]     
       - attach_workspace:
           at: .circleci/ansible/
       - run:
