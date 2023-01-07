@@ -280,7 +280,7 @@ jobs:
 
   run-migrations:
     docker:
-      - image: cimg/node:19.3.0
+      - image: cimg/node:13.8.0
     steps:
       - checkout
       - restore_cache:
@@ -289,8 +289,7 @@ jobs:
           name: Run migrations
           command: |
             cd backend
-            npm install
-            npm audit fix --force
+            npm install  
             npm run migrations > migrations_dump.txt
             cat migrations_dump.txt
       - run:
