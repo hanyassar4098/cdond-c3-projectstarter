@@ -10,6 +10,17 @@ parameters:
     default: "CcbnMs23JZkzFEthwRcGRn" 
 
 commands:
+  install_ansible:
+    description: Install Ansible
+    steps:
+    - run:
+        name: Install Ansible  
+        command: |
+          sudo apt update
+          sudo apt install software-properties-common -y
+          sudo add-apt-repository --yes -update ppa:ansible/ansible
+          sudo add install ansible -y
+
   node_install:
     description: install Node.js 13
     steps:
@@ -230,10 +241,12 @@ jobs:
   configure-infrastructure:
     docker:
       # Docker image here that supports Ansible
-      - image: python:3.7-alpine3.11
+      - image: cimg/python:3.10
     steps:
       # Checkout code from git
       - checkout
+      - awscli_install
+      - install_ansible
       # Add ssh keys with fingerprint
       - add_ssh_keys:
           fingerprints: ["79:48:1d:60:a7:48:6c:00:90:77:1c:93:b6:72:e0:ce"]
@@ -241,41 +254,13 @@ jobs:
       - attach_workspace:
           at: ~/
       - run:
-          name: Install dependencies
+          name: Run Configure Server Ansible play
           command: |
-            # Your code here
-            apk add --update ansible
-            # cat .circleci/ansible/inventory.txt
-            #exit 1
-      - run:
-          name: Configure server
-          command: |
-            # Your code here
-            echo ENVIRONMENT=production > "backend/.env"
-            echo TYPEORM_CONNECTION=postgres >> "backend/.env"
-            echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> "backend/.env"
-            echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> "backend/.env"
-            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "backend/.env"
-            echo NODE_ENV=production >> "backend/.env"
-            echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
-            echo TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"
-            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
-            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
-            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"            
-            # cd .circleci/ansible
-            # pwd &&
-            # ls -la
-            # cat inventory
-            ansible-playbook \
-              -i .circleci/ansible/inventory.txt \
-              .circleci/ansible/configure-server.yml          
-            #exit 1
-      - run:
-          name: Install AWS CLI for rollback
-          when: on_fail
-          command: |
-            apk add --update py3-pip && pip3 install --upgrade pip && pip3 install awscli            
-      # Here's where you will add some code to rollback on failure  
+            cd .circleci/ansible
+            cat inventory.txt
+
+            ansible-playbook -i inventory.txt configure-server.yml
+
       - destroy_environment
 
   run-migrations:
@@ -329,7 +314,7 @@ jobs:
           
   deploy-frontend:
     docker:
-      - image: cimg/base:stable
+      - image: cimg/python:3.10
     steps:
       - checkout
       - awscli_install
@@ -344,56 +329,68 @@ jobs:
       - run:
           name: Get backend url
           command: |
-            export BACKEND_IP=$(aws ec2 describe-instances \
+            BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters Name=tag:aws:cloudformation:stack-name,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7} \
               --output text)
-            export API_URL="http://${BACKEND_IP}:3030"
-            echo "API_URL = ${API_URL}"
-            echo "API_URL=http://${BACKEND_IP}:3030" >> frontend/.env
+
+            echo "API_URL=http://${BACKEND_PUBLIC_IP}:3030" >> frontend/.env
             cat frontend/.env
+
       - run:
           name: Deploy frontend objects
           command: |
             cd frontend
-            npm install
             npm run build
-            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+            
       - destroy_environment
       - revert-migrations
       
   deploy-backend:
     docker:
-      # Docker image here that supports Ansible
-      - image: python:3.7-alpine3.11
+      - image: cimg/python:3.10
     steps:
       # Checkout code from git
       - checkout
-      # Add ssh keys with fingerprint
+      - awscli_install
+      - install_ansible
+      - node_install
+      - restore_cache:
+          keys: [build-backend] 
       - add_ssh_keys:
           fingerprints: ["79:48:1d:60:a7:48:6c:00:90:77:1c:93:b6:72:e0:ce"]     
       - attach_workspace:
-          at: .circleci/ansible/
+          at: ~/
+
       - run:
           name: Install dependencies
           command: |
             # your code here
-            apk add --update ansible
-            apk add --update tar gzip curl
-            apk add --update openssh-client
+            cd backend
+            npm install
+            # apk add --update tar gzip curl
+            # apk add --update openssh-client
+      - run:
+          name: Package Backend
+          command: |
+            cd backend
+            npm run build
+            tar -czf artifact.tar.gz dist/* package*
+
+            cd ..
+            cp backend/artifact.tar.gz .circleci/ansible/roles/deploy/files     
+                  
       - run:
           name: Deploy backend
           command: |
-            # your code here
-            tar -C backend -czvf artifact.tar.gz .
-            ls -la           
-      - run:
-          name: Deploy backend 2
-          command: |
-            export ANSIBLE_HOST_KEY_CHECKING=False
-            ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i /tmp/.circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml           
-      # Here's where you will add some code to rollback on failure  
+            export TYPEORM_MIGRATIONS_DIR=./migrations
+            export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
+            export TYPEORM_MIGRATIONS=./migrations/*.ts
+
+            cd .circleci/ansible
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml 
       - revert-migrations      
       - destroy_environment
           
