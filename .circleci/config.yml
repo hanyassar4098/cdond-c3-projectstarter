@@ -418,6 +418,7 @@ jobs:
           name: Backend smoke test.
           command: |
             # your code here
+            echo $BACKEND_URL
             if curl -s https://${BACKEND_URL}:3030/api/status
             then
             return 1
@@ -428,7 +429,7 @@ jobs:
           name: Frontend smoke test.
           command: |
             # your code here
-            URL="http://    << pipeline.parameters.workflow-id >>.s3-website-us-east-1.amazonaws.com"
+            URL="http://<< pipeline.parameters.workflow-id >>.s3-website-us-east-1.amazonaws.com"
             echo $URL
             if curl -s ${URL} | grep "Welcome"
             then
