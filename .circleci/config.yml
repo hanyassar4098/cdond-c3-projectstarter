@@ -317,7 +317,7 @@ jobs:
           
   deploy-frontend:
     docker:
-      - image: cimg/python:3.10
+      - image: cimg/base:stable
     steps:
       - checkout
       - awscli_install
@@ -352,20 +352,19 @@ jobs:
       
   deploy-backend:
     docker:
-      - image: cimg/python:3.10
+      - image: cimg/base:stable
     steps:
       # Checkout code from git
       - checkout
       - awscli_install
       - install_ansible
       - node_install
-      - restore_cache:
-          keys: [build-backend] 
       - add_ssh_keys:
           fingerprints: ["79:48:1d:60:a7:48:6c:00:90:77:1c:93:b6:72:e0:ce"]     
       - attach_workspace:
           at: ~/
-
+      - restore_cache:
+          keys: [build-backend] 
       - run:
           name: Install dependencies
           command: |
@@ -418,7 +417,7 @@ jobs:
           name: Backend smoke test.
           command: |
             # your code here
-            echo $BACKEND_URL
+            echo ${BACKEND_URL}
             if curl -s https://${BACKEND_URL}:3030/api/status
             then
             return 1
