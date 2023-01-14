@@ -42,21 +42,25 @@ commands:
             unzip awscliv2.zip
             sudo ./aws/install
   destroy_environment:
-    description: Destroy back-end and front-end cloudformation stacks given a workflow ID.       
+    description: Destroy back-end and front-end cloudformation stacks given a workflow ID.    
+    parameters:
+      Workflow_ID:
+        type: string
+        default: ${CIRCLE_WORKFLOW_ID:0:7}
+
     steps:
       - run:
           name: Destroy environments
+          when: on_fail
           command: |
-            #curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            #unzip awscliv2.zip
-            #./aws/install
-            # Your code here
-            apk add --update py3-pip && pip3 install --upgrade pip && pip3 install awscli             
-            aws s3 rm --recursive s3://udapeople-<< pipeline.parameters.workflow-id >>
-            aws cloudformation delete-stack --stack-name udapeople-backend-<< pipeline.parameters.workflow-id >>
-            aws cloudformation delete-stack --stack-name udapeople-frontend-<< pipeline.parameters.workflow-id >>
-            # exit 1
-          when: on_fail  
+            # Empty frontend bucket
+            aws s3 rm s3://udapeople-<<parameters.Workflow_ID>> --recursive
+
+            # Delete frontend stack
+            aws cloudformation delete-stack --stack-name udapeople-frontend-<< parameters.Workflow_ID >>
+
+            # Delete backend stack
+            aws cloudformation delete-stack --stack-name udapeople-backend-<< parameters.Workflow_ID >> 
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
@@ -199,20 +203,21 @@ jobs:
             
   deploy-infrastructure:
     docker:
-      - image: amazon/aws-cli
+      - image: cimg/base:stable
     steps:
       # Checkout code from git
       - checkout
-      - run: yum -y install tar gzip
+      - awscli_install
+
+      # - run: yum -y install tar gzip
       - run:
           name: Ensure back-end infrastructure exists
           command: |
             aws cloudformation deploy \
                 --template-file .circleci/files/backend.yml \
+                --tags project=udapeople \
                 --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-                --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
-                --tags project=udapeople
-
+                --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  
           
       - run:
           name: Ensure front-end infrastructure exist
@@ -220,22 +225,32 @@ jobs:
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
               --tags project=udapeople \
-              --stack-name udapeople-frontend-<< pipeline.parameters.workflow-id >> \
-              --parameter-overrides ID="<< pipeline.parameters.workflow-id >>" \
-              --tags project=udapeople
+              --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" 
+
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            cd .circleci/ansible
-            aws ec2 describe-instances \
+            BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --output text >> inventory.txt
-            cat inventory.txt
-          
+              --output text)
+            echo $BACKEND_PUBLIC_IP >> .circleci/ansible/inventory.txt
+            cat .circleci/ansible/inventory.txt
+            # cd .circleci/ansible
+            # aws ec2 describe-instances \
+            #   --query 'Reservations[*].Instances[*].PublicIpAddress' \
+            #   --output text >> inventory.txt
+            # cat inventory.txt
       - persist_to_workspace:
-          root: ./
+          root: ~/
           paths:
-            - .circleci/ansible/inventory.txt
+            - project/.circleci/ansible/inventory.tx
+      # - persist_to_workspace:
+      #     root: ./
+      #     paths:
+      #       - .circleci/ansible/inventory.txt
+
 
       # Here's where you will add some code to rollback on failure      
       - destroy_environment       
