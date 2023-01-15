@@ -463,9 +463,9 @@ jobs:
             # echo $URL
             if curl -s $FRONTEND_WEBSITE | grep "Welcome"
             then
-              exit 1
+              exit 0
             else
-              exit 2
+              exit 1
             fi
       # Here's where you will add some code to rollback on failure  
       - destroy_environment
@@ -506,29 +506,43 @@ jobs:
       - checkout
       - awscli_install
       - node_install
-      - run:
-          name: Get old stack workflow id
-          command: |
-            export OLD_WORKFLOW_ID=$(aws cloudformation \
-                      list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-                      --no-paginate --output text)
-            echo "Old Wokflow ID: $OLD_WORKFLOW_ID"
-            curl https://kvdb.io/CcbnMs23JZkzFEthwRcGRn/old_workflow_id -d "${OLD_WORKFLOW_ID}"
+      # - run:
+      #     name: Get old stack workflow id
+      #     command: |
+      #       export OLD_WORKFLOW_ID=$(aws cloudformation \
+      #                 list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+      #                 --no-paginate --output text)
+      #       echo "Old Wokflow ID: $OLD_WORKFLOW_ID"
+      #       curl https://kvdb.io/CcbnMs23JZkzFEthwRcGRn/old_workflow_id -d "${OLD_WORKFLOW_ID}"
       - run:
           name: Remove old stacks and files
           command: |
-            if [ ! -z $OldWorkflowID ]
+            export STACKS=($(aws cloudformation list-stacks \
+                --query "StackSummaries[*].StackName" \
+                --stack-status-filter CREATE_COMPLETE --no-paginate --output text))
+            echo Stack names:"${STACKS[@]}"
+
+            export OldWorkflowID=$(curl --insecure https://kvdb.io/CcbnMs23JZkzFEthwRcGRn/old_workflow_id)
+            echo Old workflow ID: $OldWorkflowID
+
+            if [[  "${STACKS[@]}" =~ "${OldWorkflowID}"  ]]
             then
-              echo "I'm HERE !!!"
-              aws s3 rm s3://udapeople-${OldWorkflowID} --recursive
-              aws s3 rb s3://udapeople-${OldWorkflowID} --force
-              aws cloudformation delete-stack --stack-name backend-${OldWorkflowID}
-              aws cloudformation delete-stack --stack-name frontend-${OldWorkflowID}
-              echo "Stacks deleted succesfully"
-            else
-              echo "Fresh New Stacks"
+              aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
+              aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
+              aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
             fi
-          no_output_timeout: 30m  
+          #   if [ ! -z $OldWorkflowID ]
+          #   then
+          #     echo "I'm HERE !!!" udapeople-frontend-
+          #     aws s3 rm s3://udapeople-${OldWorkflowID} --recursive
+          #     aws s3 rb s3://udapeople-${OldWorkflowID} --force
+          #     aws cloudformation delete-stack --stack-name backend-${OldWorkflowID}
+          #     aws cloudformation delete-stack --stack-name frontend-${OldWorkflowID}
+          #     echo "Stacks deleted succesfully"
+          #   else
+          #     echo "Fresh New Stacks"
+          #   fi
+          # no_output_timeout: 30m  
 workflows:
   default:
     jobs:
