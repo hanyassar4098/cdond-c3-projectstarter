@@ -463,11 +463,11 @@ jobs:
             if curl -s ${URL} | grep "Welcome"
             then
                 # Change this to 0 after the job fails
-              return 1
+              exit 0
             else
-              return 1
+              exit 1
             fi
-      # Here's where you will add some code to rollback on failure  
+
       - destroy_environment
       - revert-migrations  
   cloudfront-update:
@@ -506,14 +506,7 @@ jobs:
       - checkout
       - awscli_install
       - node_install
-      # - run:
-      #     name: Get old stack workflow id
-      #     command: |
-      #       export OLD_WORKFLOW_ID=$(aws cloudformation \
-      #                 list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-      #                 --no-paginate --output text)
-      #       echo "Old Wokflow ID: $OLD_WORKFLOW_ID"
-      #       curl https://kvdb.io/CcbnMs23JZkzFEthwRcGRn/old_workflow_id -d "${OLD_WORKFLOW_ID}"
+
       - run:
           name: Remove old stacks and files
           command: |
@@ -531,18 +524,7 @@ jobs:
               aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
               aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
             fi
-          #   if [ ! -z $OldWorkflowID ]
-          #   then
-          #     echo "I'm HERE !!!" udapeople-frontend-
-          #     aws s3 rm s3://udapeople-${OldWorkflowID} --recursive
-          #     aws s3 rb s3://udapeople-${OldWorkflowID} --force
-          #     aws cloudformation delete-stack --stack-name backend-${OldWorkflowID}
-          #     aws cloudformation delete-stack --stack-name frontend-${OldWorkflowID}
-          #     echo "Stacks deleted succesfully"
-          #   else
-          #     echo "Fresh New Stacks"
-          #   fi
-          # no_output_timeout: 30m  
+
 workflows:
   default:
     jobs:
