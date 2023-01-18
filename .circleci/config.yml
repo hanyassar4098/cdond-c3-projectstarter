@@ -458,18 +458,20 @@ jobs:
       - run:
           name: Frontend smoke test.
           command: |
-            FRONTEND_WEBSITE=https://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3.${AWS_DEFAULT_REGION}.amazonaws.com
-            # URL="http://<< pipeline.parameters.workflow-id >>.s3-website-us-east-1.amazonaws.com"
-            # echo $URL
-            if curl -s $FRONTEND_WEBSITE | grep "Welcome"
+            # FRONTEND_WEBSITE=https://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3.${AWS_DEFAULT_REGION}.amazonaws.com
+            # # URL="http://<< pipeline.parameters.workflow-id >>.s3-website-us-east-1.amazonaws.com"
+            # # echo $URL
+            # if curl -s $FRONTEND_WEBSITE | grep "Welcome"
+            URL="http://udapeople-s3bucket-${CIRCLE_WORKFLOW_ID}.s3-website.us-east-1.amazonaws.com/#/employees"
+            if curl -s ${URL} | grep "Welcome"
             then
               exit 0
             else
               exit 1
             fi
       # Here's where you will add some code to rollback on failure  
-      # - destroy_environment
-      # - revert-migrations  
+      - destroy_environment
+      - revert-migrations  
   cloudfront-update:
     docker:
       - image: cimg/base:stable
