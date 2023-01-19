@@ -2,8 +2,14 @@ URL01
 https://github.com/hanyassar4098/cdond-c3-projectstarter
 
 URL02
-http://udapeople-7657983.s3-website-us-east-1.amazonaws.com/#/employees
+http://udapeople-42f0455.s3-website-us-east-1.amazonaws.com
 
 URL03
-https://d1lo0wllnxd03p.cloudfront.net/#/employees
+http://d1lo0wllnxd03p.cloudfront.net/#/employees
+
+URL04 
+ec2-44-212-63-167.compute-1.amazonaws.com
+
+URL05
+ec2-35-175-140-109.compute-1.amazonaws.com
 
